@@ -68,19 +68,3 @@ fn command_handler(command: &Commands) {
 fn get_current_dir() -> Result<PathBuf, std::io::Error> {
     std::env::current_dir()
 }
-
-/// This just writes some text into a file that we need to test that the list can show
-fn setup_state() {
-    let data = "some text\nwritten to file\nhere ";
-    match fs::create_dir("/tmp/coal") {
-        Ok(_) => println!("Directory created at /tmp/coal"),
-        Err(error) => {
-            if error.kind() != std::io::ErrorKind::AlreadyExists {
-                panic!("Trying to create directory with error: {:?}", error)
-            } else {
-                println!("Directory already exists at /tmp/coal")
-            }
-        }
-    };
-    fs::write(TEST_PATH, data).expect("Should be able to write to `/tmp/coal/file.txt`");
-}
