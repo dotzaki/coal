@@ -16,7 +16,8 @@ struct State {
     tracking_repo: Vec<PathBuf>,
 }
 
-/// Coalesce your repositories 🧐
+/// Command line input, used to parse whether or not the application is ran with or without
+/// arguments
 #[derive(Parser, Debug)]
 #[command(author, about, version, long_about = None)]
 struct Cli {
@@ -24,6 +25,7 @@ struct Cli {
     command: Option<Commands>,
 }
 
+/// Wanted enums, so we have a "definitive" set of commands that exist?
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Add repo to tracking
@@ -54,6 +56,9 @@ fn main() {
     }
 }
 
+/// When application is ran with commands, then it is handled here.
+/// We might want to use some form of strategy pattern to handle the commands?
+/// To be honest though, just get it done quick and dirty.
 fn command_handler(command: &Commands) {
     match command {
         Commands::Add(path) => {
@@ -65,6 +70,9 @@ fn command_handler(command: &Commands) {
     }
 }
 
+/// Just to get the current directory that the application is ran from.
+/// I want this so when the user rungs `coal add` and some relative path, then we can get the
+/// absolute path via. prepending this functions output
 fn get_current_dir() -> Result<PathBuf, std::io::Error> {
     std::env::current_dir()
 }
