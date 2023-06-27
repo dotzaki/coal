@@ -9,6 +9,8 @@ use std::{
 
 use clap::{Args, Parser, Subcommand};
 
+use path_absolutize::Absolutize;
+
 const TEST_PATH: &str = "/tmp/coal/file";
 
 /// State of the application, used to write with serde?
@@ -29,18 +31,18 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Add repo to tracking
-    Add(RepoPath),
+    Add { path: PathBuf },
     /// Delete repo from tracking
-    Delete(RepoPath),
+    Delete { path: PathBuf },
     /// List tracking repos
     List,
 }
 
-#[derive(Args, Debug)]
-struct RepoPath {
-    /// Directory path
-    path: PathBuf,
-}
+// #[derive(Args, Debug)]
+// struct RepoPath {
+//     /// Directory path
+//     path: PathBuf,
+// }
 
 /// Check if the command is being ran by itself ... if so, run the tui.
 /// If it is being ran with commands then handle.
@@ -61,11 +63,11 @@ fn main() {
 /// To be honest though, just get it done quick and dirty.
 fn command_handler(command: &Commands) {
     match command {
-        Commands::Add(path) => {
-            // Write into TEST_PATH for now.
-            //
+        Commands::Add { path } => {
+            let apath = get_absolute_path(path);
+            println!("{:?}", apath);
         }
-        Commands::Delete(path) => println!("Del {:#?}", path.path),
+        Commands::Delete { path } => println!("Del {:#?}", path),
         Commands::List => println!("List"),
     }
 }
@@ -75,4 +77,9 @@ fn command_handler(command: &Commands) {
 /// absolute path via. prepending this functions output
 fn get_current_dir() -> Result<PathBuf, std::io::Error> {
     std::env::current_dir()
+}
+
+fn get_absolute_path(path: &PathBuf) -> PathBuf {
+    let p = Path::new(&path);
+    p.absolutize().unwrap().to_path_buf()
 }
