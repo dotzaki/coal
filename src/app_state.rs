@@ -34,8 +34,15 @@ fn write_state(state: AppState) {
     fs::write(TEST_PATH, &se).expect("Tried to write serialized AppState into TEST_PATH");
 }
 
+/// List all of the Repo objects in AppState::tracking_repo
 pub fn list_tracking() {
-    todo!()
+    if get_state().tracking_repo.is_empty() {
+        println!("No paths are being tracked");
+    } else {
+        for repo in get_state().tracking_repo.iter() {
+            println!("{:#?}", repo);
+        }
+    }
 }
 
 pub fn delete_path(apath: &PathBuf) {
