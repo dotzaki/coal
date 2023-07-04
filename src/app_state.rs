@@ -52,9 +52,14 @@ pub fn delete_path(apath: &PathBuf) {
 }
 
 /// Add path to tracking
-/// TODO: Repositories should be unique, handle by checking the commit hash of the first commit
-/// then error out if the commit hash is the same
 pub fn add_path(apath: &PathBuf) {
+
+    for repo in get_state().tracking_repo.iter() {
+        if repo.path == *apath {
+            println!("Path {:?} is already being tracked", apath);
+            return;
+        }
+    }
     if has_repo(apath) {
         println!("Adding path: {:?}", apath);
         let name = apath.file_name();
