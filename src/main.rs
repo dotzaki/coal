@@ -54,7 +54,7 @@ fn command_handler(command: &Commands) {
         }
         Commands::Delete { path } => {
             apath = get_absolute_path(path);
-            app_state::delete_path(&apath);
+            app_state::delete_path(apath.file_name().unwrap().to_str().unwrap().to_string());
         }
         Commands::List => {
             app_state::list_tracking();

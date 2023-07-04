@@ -7,7 +7,7 @@ pub struct AppState {
     tracking_repo: Vec<Repo>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Repo {
     name: String,
     path: PathBuf,
@@ -45,13 +45,26 @@ pub fn list_tracking() {
     }
 }
 
-pub fn delete_path(apath: &PathBuf) {
-    // if path in tracking
-    // delete path from tracking
-    // else path is not in tracking
+/// Delete a path from tracking via. name as the names should be unique
+/// TODO: Make this less shit
+pub fn delete_path(path_name: String) {
+    let mut app_state = get_state();
+    let mut index = 0;
+    for repo in app_state.tracking_repo.iter() {
+        if repo.name == path_name {
+            app_state.tracking_repo.remove(index);
+            write_state(app_state);
+            println!("Path {:?} has been removed", path_name);
+            return;
+        }
+        index += 1;
+    }
+    println!("Path is not being tracked.");
 }
 
 /// Add path to tracking
+/// Assume the names of the directory are unique.
+/// TODO: Have some unique identifier that isn't the name of the directory.
 pub fn add_path(apath: &PathBuf) {
 
     for repo in get_state().tracking_repo.iter() {
