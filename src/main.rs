@@ -42,19 +42,17 @@ fn main() {
     }
 }
 
+
 /// When application is ran with commands, then it is handled here.
 /// We might want to use some form of strategy pattern to handle the commands?
 /// To be honest though, just get it done quick and dirty.
 fn command_handler(command: &Commands) {
-    let apath;
     match command {
         Commands::Add { path } => {
-            apath = get_absolute_path(path);
-            app_state::add_path(&apath);
+            app_state::add_path(&get_absolute_path(path));
         }
         Commands::Delete { path } => {
-            apath = get_absolute_path(path);
-            app_state::delete_path(apath.file_name().unwrap().to_str().unwrap().to_string());
+            app_state::delete_path(get_absolute_path(path).file_name().unwrap().to_str().unwrap().to_string());
         }
         Commands::List => {
             app_state::list_tracking();
