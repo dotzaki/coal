@@ -1,9 +1,31 @@
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
+
 use path_absolutize::Absolutize;
 
-mod app_state;
+mod app;
+mod cli;
+mod repo;
+mod tui;
+
+/// Check if the command is being ran by itself ... if so, run the tui.
+/// If it is being ran with commands then handle.
+fn main() {
+    let cli = Cli::parse();
+
+    repo::setup_tracking_file();
+
+    match cli.command {
+        Some(command) => {
+            let _ = cli::run();
+        }
+        None => {
+            // Handle error here from tui initialize
+            let _ = tui::run();
+        }
+    }
+}
 
 /// Command line input, used to parse whether or not the application is ran with or without
 /// arguments
@@ -18,7 +40,6 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Add repo to tracking
-
     Add { path: PathBuf },
     /// Delete repo from tracking
     Delete { path: PathBuf },
@@ -26,42 +47,8 @@ enum Commands {
     List,
 }
 
-/// Check if the command is being ran by itself ... if so, run the tui.
-/// If it is being ran with commands then handle.
-fn main() {
-    let cli = Cli::parse();
-    app_state::init_state();
-
-    match cli.command {
-        Some(command) => {
-            command_handler(&command);
-        }
-        None => {
-            println!("Starting TUI");
-        }
-    }
-}
-
-
-/// When application is ran with commands, then it is handled here.
-/// We might want to use some form of strategy pattern to handle the commands?
-/// To be honest though, just get it done quick and dirty.
-fn command_handler(command: &Commands) {
-    match command {
-        Commands::Add { path } => {
-            app_state::add_path(&get_absolute_path(path));
-        }
-        Commands::Delete { path } => {
-            app_state::delete_path(get_absolute_path(path).file_name().unwrap().to_str().unwrap().to_string());
-        }
-        Commands::List => {
-            app_state::list_tracking();
-        }
-    }
-}
-
 /// Given a path in any format (relative, absolute, etc..) give back the absolute path.
-fn get_absolute_path(path: &PathBuf) -> PathBuf {
+fn get_absolute_path(path: PathBuf) -> PathBuf {
     let p = Path::new(&path);
     p.absolutize().unwrap().to_path_buf()
 }
