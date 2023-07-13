@@ -17,11 +17,10 @@ fn main() {
     let cli = Cli::parse();
 
     repo::setup_tracking_file();
-    let mut tracking = Tracking::new();
 
     match cli.command {
         Some(command) => {
-            let _ = cli::run(command, tracking);
+            let _ = cli::run(command);
         }
         None => {
             // Handle error here from tui initialize

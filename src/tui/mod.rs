@@ -14,10 +14,13 @@ use ratatui::{
     Terminal,
 };
 
-use crate::app::App;
+use crate::{app::App, repo::Tracking};
+mod ui;
 
 /// Step off point for the tui app
 pub fn run() -> Result<(), Box<dyn Error>> {
+    let mut tracking = Tracking::new();
+
     // Setup
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -26,7 +29,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let tick_rate = Duration::from_millis(250);
-    let app = App::new();
+    let app = App::new(tracking);
     let res = run_app(&mut terminal, app, tick_rate);
 
     // Tear down

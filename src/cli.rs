@@ -6,7 +6,8 @@ use crate::{repo::Tracking, Command};
 
 /// Handles the CLI commands
 /// TODO: Make the output more pretty
-pub fn run(command: Command, mut tracking: Tracking) {
+pub fn run(command: Command) {
+    let mut tracking = Tracking::new();
     match command {
         Command::Add { path } => {
             let res = tracking.add(&path);
