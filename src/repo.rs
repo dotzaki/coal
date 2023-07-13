@@ -25,12 +25,12 @@ impl Tracking {
     }
 
     /// This serializes the current state into TEST_PATH
-    pub fn write_changes(self) {
-        let se = serde_yaml::to_string(&self).expect("Tried to serialize AppState into string");
+    pub fn w(&self) {
+        let se = serde_yaml::to_string(self).expect("Tried to serialize AppState into string");
         fs::write(TEST_PATH, &se).expect("Tried to write serialized AppState into TEST_PATH");
     }
 
-    pub fn list(self) -> Vec<Repo> {
+    pub fn list(&self) -> Vec<Repo> {
         if self.active.is_empty() {
             Vec::new()
         } else {
@@ -41,13 +41,40 @@ impl Tracking {
     /// Loop over the actively tracked repo and use `write_changes` then send whether or not
     /// success
     /// Returns whether or not the path was successfully deleted
-    pub fn delete(self, path_name: String) -> bool {
-        todo!()
+    /// TODO: Might want to use anyhow errors instead of bool to updat caller on what happened.
+    pub fn delete(&mut self, path_name: String) -> bool {
+        let mut index = 0;
+        for repo in self.active.iter() {
+            if repo.name == path_name {
+                self.active.remove(index);
+                self.w();
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Returns whether or not the path was successfully added
-    pub fn add(self) -> bool {
-        todo!()
+    pub fn add(&mut self, path: &PathBuf) -> bool {
+        for repo in self.active.iter() {
+            // If the repo already exists
+            if repo.path == *path {
+                return false;
+            }
+        }
+
+        if has_repo(path) {
+            let name = path.file_name();
+            let repo = Repo {
+                name: name.unwrap().to_str().unwrap().to_string(),
+                path: path.clone(),
+            };
+            self.active.push(repo);
+            self.w();
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
@@ -55,43 +82,6 @@ impl Tracking {
 pub struct Repo {
     name: String,
     path: PathBuf,
-}
-
-pub fn delete_repo(path_name: String) {
-    let mut app_state = get_state();
-    let mut index = 0;
-    for repo in app_state.tracking_repo.iter() {
-        if repo.name == path_name {
-            app_state.tracking_repo.remove(index);
-            write_state(app_state);
-            println!("Path {:?} has been removed", path_name);
-            return;
-        }
-        index += 1;
-    }
-    println!("Path is not being tracked.");
-}
-
-pub fn add_repo(apath: &PathBuf) {
-    for repo in get_state().tracking_repo.iter() {
-        if repo.path == *apath {
-            println!("Path {:?} is already being tracked", apath);
-            return;
-        }
-    }
-    if has_repo(apath) {
-        println!("Adding path: {:?}", apath);
-        let name = apath.file_name();
-        let repo = Repo {
-            name: name.unwrap().to_str().unwrap().to_string(),
-            path: apath.clone(),
-        };
-        let mut app_state = get_state();
-        app_state.tracking_repo.push(repo);
-        write_state(app_state);
-    } else {
-        println!("Path {:?} does not have a git repo", apath);
-    }
 }
 
 /// Checks if a path has a git repo.
