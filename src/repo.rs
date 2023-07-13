@@ -13,6 +13,9 @@ pub struct Tracking {
     pub active: Vec<Repo>,
 }
 
+/// Need to enforce there only being one "instance" at a time to avoid race conditions? possibly.
+/// Problem two separate pieces of code see the thing, both want to write assuming the original
+/// state one writes before the other, so the second has old information.
 impl Tracking {
     pub fn new() -> Tracking {
         let data = fs::read_to_string(TEST_PATH).expect("Tried to read TEST_PATH into string");
@@ -25,12 +28,12 @@ impl Tracking {
     }
 
     /// This serializes the current state into TEST_PATH
-    pub fn w(&self) {
+    pub fn write(&self) {
         let se = serde_yaml::to_string(self).expect("Tried to serialize AppState into string");
         fs::write(TEST_PATH, &se).expect("Tried to write serialized AppState into TEST_PATH");
     }
 
-    pub fn list(&self) -> Vec<Repo> {
+    pub fn list(self) -> Vec<Repo> {
         if self.active.is_empty() {
             Vec::new()
         } else {
@@ -47,11 +50,11 @@ impl Tracking {
         for repo in self.active.iter() {
             if repo.name == path_name {
                 self.active.remove(index);
-                self.w();
+                self.write();
                 return true;
             }
         }
-        return false;
+        false
     }
 
     /// Returns whether or not the path was successfully added
@@ -70,10 +73,10 @@ impl Tracking {
                 path: path.clone(),
             };
             self.active.push(repo);
-            self.w();
-            return true;
+            self.write();
+            true
         } else {
-            return false;
+            false
         }
     }
 }
@@ -89,9 +92,9 @@ fn has_repo(apath: &PathBuf) -> bool {
     let mut path = apath.clone();
     path.push(".git");
     if path.exists() {
-        return true;
+        true
     } else {
-        return false;
+        false
     }
 }
 

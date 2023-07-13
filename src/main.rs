@@ -1,8 +1,10 @@
+#![allow(unused, dead_code)]
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
 use path_absolutize::Absolutize;
+use repo::Tracking;
 
 mod app;
 mod cli;
@@ -15,10 +17,11 @@ fn main() {
     let cli = Cli::parse();
 
     repo::setup_tracking_file();
+    let mut tracking = Tracking::new();
 
     match cli.command {
         Some(command) => {
-            let _ = cli::run();
+            let _ = cli::run(command, tracking);
         }
         None => {
             // Handle error here from tui initialize
@@ -33,22 +36,16 @@ fn main() {
 #[command(author, about, version, long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Option<Command>,
 }
 
 /// Wanted enums, so we have a "definitive" set of commands that exist?
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Command {
     /// Add repo to tracking
     Add { path: PathBuf },
     /// Delete repo from tracking
     Delete { path: PathBuf },
     /// List tracking repos
     List,
-}
-
-/// Given a path in any format (relative, absolute, etc..) give back the absolute path.
-fn get_absolute_path(path: PathBuf) -> PathBuf {
-    let p = Path::new(&path);
-    p.absolutize().unwrap().to_path_buf()
 }
