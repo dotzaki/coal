@@ -83,8 +83,8 @@ impl Tracking {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Repo {
-    name: String,
-    path: PathBuf,
+    pub name: String,
+    pub path: PathBuf,
 }
 
 /// Checks if a path has a git repo.

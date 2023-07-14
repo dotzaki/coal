@@ -3,9 +3,9 @@ use ratatui::widgets::ListState;
 use crate::repo::{Repo, Tracking};
 
 /// This is used for the TUI implementation
-struct StatefulList {
-    state: ListState,
-    items: Vec<Repo>,
+pub struct StatefulList {
+    pub state: ListState,
+    pub items: Vec<Repo>,
 }
 
 impl StatefulList {
@@ -54,8 +54,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> App {
-        let tracking = Tracking::new();
+    pub fn new(tracking: Tracking) -> App {
         App {
             repo_list: StatefulList::with_items(tracking.active),
             should_quit: false,
@@ -72,7 +71,7 @@ impl App {
         self.repo_list.next();
     }
 
-    pub fn on_key(&self, c: char) {
+    pub fn on_key(&mut self, c: char) {
         match c {
             'q' => {
                 self.should_quit = true;
