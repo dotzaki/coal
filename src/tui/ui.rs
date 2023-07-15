@@ -1,9 +1,10 @@
+use anyhow::Context;
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
 
@@ -15,10 +16,14 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     // Chunk 0 is just the list of tracking repos
     // Chunk 1 is dependent on the currently "selected" item from the list of tracking repos.
 
+    // TODO: IF no repositories in tracking then hide the block content and just show the block
+    // outlines with a message as the contents.
+
     // Render the LHS
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .margin(2)
         .split(f.size());
 
     let repos: Vec<ListItem> = app
@@ -41,4 +46,26 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .highlight_style(Style::default().add_modifier(Modifier::BOLD).bg(Color::Red));
 
     f.render_stateful_widget(repos, chunks[0], &mut app.repo_list.state);
+
+    // Render RHS
+
+    let selected_index: usize = app.repo_list.state.selected().unwrap_or(0);
+
+    let current_path: &str = match app.repo_list.items[selected_index].path.to_str() {
+        Some(i) => i,
+        None => "n/a", //FIXME: Change this to something better wtf?
+    };
+
+    let text = vec![Line::from(current_path)];
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Repository Information");
+
+    let info = Paragraph::new(text)
+        .block(block)
+        .alignment(ratatui::layout::Alignment::Center)
+        .wrap(Wrap { trim: true });
+
+    f.render_widget(info, chunks[1]);
 }
