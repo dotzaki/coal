@@ -136,6 +136,7 @@ impl App {
         let path = CString::new(EDITOR_PATH).unwrap();
         let args = vec![
             CString::new("nvim").unwrap(),
+            CString::new(".").unwrap(),
             // Add any arguments you want to pass to neovim here
         ];
         execv(&path, &args).expect("execv failed");
