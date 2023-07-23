@@ -144,7 +144,7 @@ impl App {
             CString::new(".").unwrap(),
             // Add any arguments you want to pass to neovim here
         ];
-        execv(&path, &args).expect("execv failed");
+        execv(&path, &args).expect("Tried to execv EDITOR");
     }
 
     /// Open the selected repo in lazygit
