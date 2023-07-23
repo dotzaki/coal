@@ -12,7 +12,9 @@ repository = "https://github.com/dotzaki/coal"
 anyhow = "1.0.71"
 clap = { version = "4.3.5", features = ["derive"] }
 crossterm = "0.26.1"
+directories = "5.0.1"
+nix = { version = "0.26.2", default-features = true }
 path-absolutize = "3.1.0"
-ratatui = { version = "0.21.0", features = ["all-widgets"] }
+ratatui = { version = "0.22.0", features = ["all-widgets"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_yaml = "0.9.22"

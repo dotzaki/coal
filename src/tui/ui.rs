@@ -11,11 +11,10 @@ use ratatui::{
 use crate::app::App;
 
 /// Draws the UI
+/// Split into two chunks.
+/// Chunk 0 is just the list of tracking repos
+/// Chunk 1 is dependent on the currently "selected" item from the list of tracking repos.
 pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    // Split into two chunks.
-    // Chunk 0 is just the list of tracking repos
-    // Chunk 1 is dependent on the currently "selected" item from the list of tracking repos.
-
     // TODO: IF no repositories in tracking then hide the block content and just show the block
     // outlines with a message as the contents.
 
@@ -26,46 +25,66 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .margin(2)
         .split(f.size());
 
-    let repos: Vec<ListItem> = app
-        .repo_list
-        .items
-        .iter()
-        .map(|i| {
-            ListItem::new(i.name.clone()).style(Style::default().fg(Color::Black).bg(Color::White))
-        })
-        .collect();
+    let block_lhs = Block::default()
+        .borders(Borders::ALL)
+        .title("Repository names");
 
-    let repos = List::new(repos)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Repository names"),
-        )
-        // TODO: Change the highlight color to be dynamic depending on the current background
-        // color?
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD).bg(Color::Red));
-
-    f.render_stateful_widget(repos, chunks[0], &mut app.repo_list.state);
-
-    // Render RHS
-
-    let selected_index: usize = app.repo_list.state.selected().unwrap_or(0);
-
-    let current_path: &str = match app.repo_list.items[selected_index].path.to_str() {
-        Some(i) => i,
-        None => "n/a", //FIXME: Change this to something better wtf?
-    };
-
-    let text = vec![Line::from(current_path)];
-
-    let block = Block::default()
+    let block_rhs = Block::default()
         .borders(Borders::ALL)
         .title("Repository Information");
 
-    let info = Paragraph::new(text)
-        .block(block)
-        .alignment(ratatui::layout::Alignment::Center)
-        .wrap(Wrap { trim: true });
+    // TODO: Handle for when there are no repositories in tracking in a better way?
+    if app.state_list.items.is_empty() {
+        let text = vec![Line::from("No repositories in tracking")];
+        let paragraph = Paragraph::new(text)
+            .block(block_lhs)
+            .alignment(ratatui::layout::Alignment::Center)
+            .wrap(Wrap { trim: true });
+        f.render_widget(paragraph, chunks[0]);
+    } else {
+        let repos: Vec<ListItem> = app
+            .state_list
+            .items
+            .iter()
+            .map(|i| {
+                ListItem::new(i.name.clone())
+                    .style(Style::default().fg(Color::Black).bg(Color::White))
+            })
+            .collect();
 
-    f.render_widget(info, chunks[1]);
+        let repos = List::new(repos)
+            .block(block_lhs)
+            // TODO: Change the highlight color to be dynamic depending on the current background
+            // color?
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD).bg(Color::Red));
+
+        f.render_stateful_widget(repos, chunks[0], &mut app.state_list.state);
+    }
+
+    // Render RHS
+
+    if app.state_list.items.is_empty() {
+        let text = vec![Line::from("No repositories in tracking")];
+        let info = Paragraph::new(text)
+            .block(block_rhs)
+            .alignment(ratatui::layout::Alignment::Center)
+            .wrap(Wrap { trim: true });
+
+        f.render_widget(info, chunks[1]);
+    } else {
+        let selected_index: usize = app.state_list.state.selected().unwrap_or(0);
+
+        let current_path: &str = match app.state_list.items[selected_index].path.to_str() {
+            Some(i) => i,
+            None => "n/a", //FIXME: Change this to something better wtf?
+        };
+
+        let text = vec![Line::from(current_path)];
+
+        let info = Paragraph::new(text)
+            .block(block_rhs)
+            .alignment(ratatui::layout::Alignment::Center)
+            .wrap(Wrap { trim: true });
+        f.render_widget(info, chunks[1]);
+    }
 }

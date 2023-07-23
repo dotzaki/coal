@@ -2,16 +2,18 @@ use std::path::{Path, PathBuf};
 
 use path_absolutize::Absolutize;
 
-use crate::{repo::Tracking, Command};
+use crate::{config, repo::Tracking, Command};
 
 /// Handles the CLI commands
-/// TODO: Make the output more pretty
 pub fn run(command: Command) {
     let mut tracking = Tracking::new();
     match command {
         Command::Add { path } => {
-            let res = tracking.add(&path);
-            println!("{:?}", res);
+            let res = tracking.add(path);
+            match res {
+                Ok(r) => println!("Added {}", r.display()),
+                Err(e) => println!("{}", e),
+            }
         }
         Command::Delete { path } => {
             let res = tracking.delete(
@@ -22,17 +24,27 @@ pub fn run(command: Command) {
                     .unwrap()
                     .to_string(),
             );
-            println!("{:?}", res);
+            match res {
+                Ok(r) => println!("Deleted {}", r),
+                Err(e) => println!("{}", e),
+            }
         }
         Command::List => {
-            let list = tracking.list();
-            println!("{:?}", list);
+            let res = tracking.list();
+            match res {
+                Ok(r) => {
+                    for repo in r {
+                        println!("{:#?}", repo);
+                    }
+                }
+                Err(e) => println!("{}", e),
+            }
         }
     }
 }
 
 /// Given a path in any format (relative, absolute, etc..) give back the absolute path.
-fn get_absolute_path(path: PathBuf) -> PathBuf {
+pub fn get_absolute_path(path: PathBuf) -> PathBuf {
     let p = Path::new(&path);
     p.absolutize().unwrap().to_path_buf()
 }

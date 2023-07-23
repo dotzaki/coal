@@ -2,12 +2,11 @@
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
-
-use path_absolutize::Absolutize;
-use repo::Tracking;
+use directories::ProjectDirs;
 
 mod app;
 mod cli;
+mod config;
 mod repo;
 mod tui;
 
@@ -16,15 +15,13 @@ mod tui;
 fn main() {
     let cli = Cli::parse();
 
-    repo::setup_tracking_file();
-
     match cli.command {
         Some(command) => {
-            let _ = cli::run(command);
+            cli::run(command);
         }
         None => {
             // Handle error here from tui initialize
-            let _ = tui::run();
+            tui::run();
         }
     }
 }

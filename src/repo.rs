@@ -1,11 +1,11 @@
 use std::{
-    fs::{self, File},
-    path::{Path, PathBuf},
+    fs::{self},
+    path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
 
-const TEST_PATH: &str = "/tmp/coal/file";
+use crate::{cli, config};
 
 /// Object to serialize/deserialize into the filesystem
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -18,76 +18,90 @@ pub struct Tracking {
 /// state one writes before the other, so the second has old information.
 impl Tracking {
     pub fn new() -> Tracking {
-        let data = fs::read_to_string(TEST_PATH).expect("Tried to read TEST_PATH into string");
-        if data.is_empty() {
-            Tracking { active: Vec::new() }
-        } else {
-            // HACK: This might not return `Tracking` object
-            serde_yaml::from_str(&data).expect("Tried to deserialize the TEST_PATH into AppState")
+        let config_path = config::get_path();
+
+        let data = match fs::read_to_string(&config_path) {
+            Ok(t) => t,
+            Err(_) => String::new(),
+        };
+
+        match serde_yaml::from_str(&data) {
+            Ok(t) => t,
+            // Make backup of current config.yaml to config.yaml.bak then restart with a fresh
+            // config.yaml
+            // TODO: Display warning! to user that the current file is erronous and it was backed
+            // and replaced with a fresh one.
+            Err(_) => {
+                let backup = config_path.with_extension("bak");
+                fs::copy(&config_path, &backup).expect("Failed to create backup of config.yaml");
+                Tracking { active: Vec::new() }
+            }
         }
     }
 
-    /// This serializes the current state into TEST_PATH
-    pub fn write(&self) {
-        let se = serde_yaml::to_string(self).expect("Tried to serialize AppState into string");
-        fs::write(TEST_PATH, &se).expect("Tried to write serialized AppState into TEST_PATH");
+    /// This serializes the current state into the `config.yaml`path.
+    fn write(&self) {
+        let se = serde_yaml::to_string(self).expect("Tried to read tracking object into string");
+
+        fs::write(config::get_path(), se)
+            .expect("Tried to write serialized tracking object into config path");
     }
 
-    pub fn list(self) -> Vec<Repo> {
+    pub fn list(&self) -> Result<Vec<Repo>, &str> {
         if self.active.is_empty() {
-            Vec::new()
+            Err("Currently not tracking any repositories.")
         } else {
-            self.active
+            Ok(self.active.clone())
         }
     }
 
-    /// Loop over the actively tracked repo and use `write_changes` then send whether or not
-    /// success
-    /// Returns whether or not the path was successfully deleted
-    /// TODO: Might want to use anyhow errors instead of bool to updat caller on what happened.
-    pub fn delete(&mut self, path_name: String) -> bool {
+    /// Returns the name of the repo that was deleted
+    pub fn delete(&mut self, dir_name: String) -> Result<String, &str> {
         let mut index = 0;
-        for repo in self.active.iter() {
-            if repo.name == path_name {
-                self.active.remove(index);
+        for i in 0..self.active.len() {
+            if self.active[i].name == dir_name {
+                self.active.remove(i);
                 self.write();
-                return true;
+                return Ok(dir_name);
             }
         }
-        false
+        Err("Repository passed in is not currently tracked.")
     }
 
-    /// Returns whether or not the path was successfully added
-    pub fn add(&mut self, path: &PathBuf) -> bool {
+    /// Returns the path if successful
+    pub fn add(&mut self, dir_path: PathBuf) -> Result<PathBuf, &str> {
+        let dir_path = cli::get_absolute_path(dir_path);
+        // If repo is already in tracking
         for repo in self.active.iter() {
-            // If the repo already exists
-            if repo.path == *path {
-                return false;
+            if repo.path == *dir_path {
+                return Err("Repository already tracked, Won't be adding {dir_path} to tracking.");
             }
         }
 
-        if has_repo(path) {
-            let name = path.file_name();
+        if has_repo(&dir_path) {
+            let name = dir_path.file_name();
             let repo = Repo {
+                // TODO: get rid of unwrap
                 name: name.unwrap().to_str().unwrap().to_string(),
-                path: path.clone(),
+                path: dir_path.to_owned(),
             };
             self.active.push(repo);
             self.write();
-            true
+            Ok(dir_path)
         } else {
-            false
+            Err("Path passed in is not a repo, via repo::has_repo()")
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Repo {
     pub name: String,
     pub path: PathBuf,
 }
 
-/// Checks if a path has a git repo.
+/// Returns true if the path passed in is a git repo.
+/// TODO: Change to handle all types of dirs, not just git repo
 fn has_repo(apath: &PathBuf) -> bool {
     let mut path = apath.clone();
     path.push(".git");
@@ -95,12 +109,5 @@ fn has_repo(apath: &PathBuf) -> bool {
         true
     } else {
         false
-    }
-}
-
-/// Check if the state file exists if not create an empty file.
-pub fn setup_tracking_file() {
-    if !Path::new(TEST_PATH).exists() {
-        File::create(TEST_PATH).expect("Tried to create TEST_PATH");
     }
 }
