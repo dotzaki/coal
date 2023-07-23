@@ -9,6 +9,7 @@ use crate::repo::{Repo, Tracking};
 
 const EDITOR_PATH: &str = "/opt/homebrew/bin/nvim";
 const SHELL_PATH: &str = "/bin/zsh";
+const LAZYGIT_PATH: &str = "/opt/homebrew/bin/lazygit";
 
 /// This is used for the TUI implementation
 pub struct StatefulList {
@@ -59,7 +60,7 @@ pub enum ClosingAction {
     Exit,
     Cd,
     Editor,
-    // Lazygit,
+    Lazygit,
 }
 
 /// Object to hold the applicaion state.
@@ -98,6 +99,10 @@ impl App {
             KeyCode::Char('e') => {
                 self.quit = true;
                 self.action = ClosingAction::Editor;
+            }
+            KeyCode::Char('l') => {
+                self.quit = true;
+                self.action = ClosingAction::Lazygit;
             }
             KeyCode::Enter => {
                 if self.state_list.items.is_empty() {
@@ -140,5 +145,16 @@ impl App {
             // Add any arguments you want to pass to neovim here
         ];
         execv(&path, &args).expect("execv failed");
+    }
+
+    /// Open the selected repo in lazygit
+    pub fn open_in_lazygit(&self) {
+        self.goto_selected_dir();
+        let path = CString::new(LAZYGIT_PATH).unwrap();
+        let args = vec![
+            CString::new("lazygit").unwrap(),
+            // Add any arguments you want to pass to lazygit here
+        ];
+        execv(&path, &args).expect("Tried to execv lazygit");
     }
 }

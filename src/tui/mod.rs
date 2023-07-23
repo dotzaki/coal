@@ -43,6 +43,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         ClosingAction::Exit => {}
         ClosingAction::Cd => app.goto_dir(),
         ClosingAction::Editor => app.open_in_editor(),
+        ClosingAction::Lazygit => app.open_in_lazygit(),
     }
 
     if let Err(err) = res {
@@ -92,6 +93,7 @@ fn run_app<B: Backend>(
                     match key.code {
                         KeyCode::Char('q') => app.on_key(KeyCode::Char('q')),
                         KeyCode::Char('e') => app.on_key(KeyCode::Char('e')),
+                        KeyCode::Char('l') => app.on_key(KeyCode::Char('l')),
                         KeyCode::Enter => app.on_key(KeyCode::Enter),
                         KeyCode::Up => app.on_up(),
                         KeyCode::Down => app.on_down(),
