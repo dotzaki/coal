@@ -7,6 +7,7 @@ use ratatui::widgets::ListState;
 
 use crate::repo::{Repo, Tracking};
 
+// TODO: Get default editor from env somehow? then use `which` to get path.
 const EDITOR_PATH: &str = "/opt/homebrew/bin/nvim";
 const SHELL_PATH: &str = "/bin/zsh";
 const LAZYGIT_PATH: &str = "/opt/homebrew/bin/lazygit";
