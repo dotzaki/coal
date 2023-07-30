@@ -13,6 +13,7 @@ anyhow = "1.0.71"
 clap = { version = "4.3.5", features = ["derive"] }
 crossterm = "0.26.1"
 directories = "5.0.1"
+last-git-commit = "0.2.0"
 nix = { version = "0.26.2", default-features = true }
 path-absolutize = "3.1.0"
 ratatui = { version = "0.22.0", features = ["all-widgets"] }

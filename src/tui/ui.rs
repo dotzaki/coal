@@ -1,4 +1,5 @@
 use anyhow::Context;
+use last_git_commit::LastGitCommit;
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
@@ -79,7 +80,28 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             None => "n/a", //FIXME: Change this to something better wtf?
         };
 
-        let text = vec![Line::from(current_path)];
+        // TODO: Clean this up
+        let lgc = LastGitCommit::new().set_path(current_path).build().unwrap();
+        let current_branch: &str = lgc.branch();
+        let message: &str = lgc.message().unwrap();
+        let author: &str = lgc.author().name().unwrap();
+
+        let text = vec![
+            Line::from(current_path),
+            Line::from(""),
+            Line::from(vec![
+                Span::raw("Branch"),
+                Span::raw(": "),
+                Span::raw(current_branch),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::raw(author),
+                Span::raw(": "),
+                Span::styled(message, Style::default().add_modifier(Modifier::ITALIC)),
+                Span::raw("."),
+            ]),
+        ];
 
         let info = Paragraph::new(text)
             .block(block_rhs)
