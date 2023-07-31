@@ -10,6 +10,7 @@ repository = "https://github.com/dotzaki/coal"
 
 [dependencies]
 anyhow = "1.0.71"
+chrono = "0.4.26"
 clap = { version = "4.3.5", features = ["derive"] }
 crossterm = "0.26.1"
 directories = "5.0.1"

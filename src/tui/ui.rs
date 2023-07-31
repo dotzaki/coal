@@ -1,4 +1,5 @@
 use anyhow::Context;
+use chrono::{TimeZone, Utc};
 use last_git_commit::LastGitCommit;
 use ratatui::{
     backend::Backend,
@@ -83,8 +84,16 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         // TODO: Clean this up
         let lgc = LastGitCommit::new().set_path(current_path).build().unwrap();
         let current_branch: &str = lgc.branch();
-        let message: &str = lgc.message().unwrap();
+        let commit_message: &str = lgc.message().unwrap();
         let author: &str = lgc.author().name().unwrap();
+        let date = lgc.timestamp().to_string();
+
+        //TODO: Clean up pls
+        let timestamp = date.parse::<i64>().unwrap();
+        // Convert the timestamp to a DateTime<Utc>
+        let datetime = Utc.timestamp(timestamp, 0); //TODO: Remove deprecated warning
+                                                    // Format the datetime as YYYY-MM-DD HH:MM:SS
+        let datestring = datetime.format("%a %b %d %H:%M:%S %Y").to_string();
 
         let text = vec![
             Line::from(current_path),
@@ -97,8 +106,13 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             Line::from(""),
             Line::from(vec![Span::raw("Author: "), Span::raw(author)]),
             Line::from(""),
+            Line::from(vec![Span::raw("Date: "), Span::raw(datestring)]),
+            Line::from(""),
             Line::from(vec![
-                Span::styled(message, Style::default().add_modifier(Modifier::ITALIC)),
+                Span::styled(
+                    commit_message,
+                    Style::default().add_modifier(Modifier::ITALIC),
+                ),
                 Span::raw("."),
             ]),
         ];
