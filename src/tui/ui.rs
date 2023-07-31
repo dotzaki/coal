@@ -95,9 +95,9 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 Span::raw(current_branch),
             ]),
             Line::from(""),
+            Line::from(vec![Span::raw("Author: "), Span::raw(author)]),
+            Line::from(""),
             Line::from(vec![
-                Span::raw(author),
-                Span::raw(": "),
                 Span::styled(message, Style::default().add_modifier(Modifier::ITALIC)),
                 Span::raw("."),
             ]),
