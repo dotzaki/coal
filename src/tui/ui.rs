@@ -91,9 +91,11 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         //TODO: Clean up pls
         let timestamp = date.parse::<i64>().unwrap();
         // Convert the timestamp to a DateTime<Utc>
-        let datetime = Utc.timestamp(timestamp, 0); //TODO: Remove deprecated warning
-                                                    // Format the datetime as YYYY-MM-DD HH:MM:SS
-        let datestring = datetime.format("%a %b %d %H:%M:%S %Y").to_string();
+        let datetime = Utc.timestamp_opt(timestamp, 0);
+
+        // Format the datetime as YYYY-MM-DD HH:MM:SS
+        // HACK: Probably handle this unwrap
+        let datestring = datetime.unwrap().format("%a %b %d %H:%M:%S %Y").to_string();
 
         let text = vec![
             Line::from(current_path),
